@@ -33,6 +33,7 @@ def get_parsing_groups():
     event_name = "\((\w+)\) ", "EventName", str    # Young
                                                                     # Any Four __Words Here
 
+    # todo fix memory units M -> K
     # Examples: (Mixed), (Young) (Mixed Collection), (System.gc())
     # Confusing : Follow the capture groups in this section closely.
     # It is recommended you use the following resource : https://regexper.com
