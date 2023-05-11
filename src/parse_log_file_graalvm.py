@@ -23,89 +23,39 @@ def get_parsing_groups():
     # Regex string, Associated capture group column name (if any), and the datatype for that capture group (if any).
     start = "^", None, None
     
-    date_time = "\[(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}[+-]\d{4})\]", "DateTime", str # [9999-08-26T14:42:00.565-0400]
-                                                                                        # [2021-08-26T14:42:59.565-0400]
-    time = "\[([\d\.]+)", "Time", float # 999999
+    time = "\[(\d+) ", "Time", float # 999999
                                         # 123541.21425
-    time_unit = "((?:s)|(?:ms)|(?:ns))\]", "TimeUnit", str  # s
+    time_unit = "(msec): ", "TimeUnit", str  # s
                                                             # ms
-    other_fields = "((?:\[.*?\])*)", "Other fields", str    # [51805y92148y45y951 it doesnt matter whats in here]
-                                                            # [gc][info][2048]
-    gc_phase = " GC\((\d+)\)", "GCIndex", int   # GC (0)
-                                                # GC (99999)
-
     # contains lookahead for time spent in event
-    event_type = " ((?:Pause(?=.*ms))|(?:Concurrent(?=.*ms))|(?:Garbage Collection)) ", "EventType", str  # Concurrent
+    event_type = "(Full GC) ", "EventType", str  # Concurrent
                                                                                                           # Pause 
-
-    event_name = "(?:(" + __words(1, 4) + ") )?", "EventName", str    # Young
+    event_name = "\((\w+)\) ", "EventName", str    # Young
                                                                     # Any Four __Words Here
 
-    additional_event_info = "((?:\((?:\w+(?:\.gc\(\))? ?){1,3}\) ){0,3})", "AdditionalEventInfo", str 
     # Examples: (Mixed), (Young) (Mixed Collection), (System.gc())
     # Confusing : Follow the capture groups in this section closely.
     # It is recommended you use the following resource : https://regexper.com
-    heap_before_gc = "(?:(\d+)M->", "HeapBeforeGC", float   # 100M->
+    heap_before_gc = "(\d+)K->", "HeapBeforeGC", float   # 100M->
                                                             # 99999M->
-    heap_after_gc = "(\d+)M", "HeapAfterGC", float  # 500M
+    heap_after_gc = "(\d+)K, ", "HeapAfterGC", float  # 500M
                                                     # 99999M
-    max_heapsize = "(?:\((\d+)M\)?)?)?(?=", "MaxHeapsize", float    # (200M)
-                                                                    # (99999M)
-    duration_ms = " ?(\d+\.\d+)ms)", "Duration_milliseconds", float # 99999.9999ms
+    # todo fix units
+    duration_ms = "([\d.]+) secs\]", "Duration_seconds", float # 99999.9999ms
                                                                     # 0.0ms
 
-    zgc_heap_before_gc = "(\d+)M\(\d+%\)", "HeapBeforeGC", float    # 123M(200%)
-                                                                    # 999M(999999%)
-    zgc_heap_after_gc = "->(\d+)M", "HeapAfterGC", float    # ->200M
-                                                            # ->99999M
-    zgc_max_heapsize = "\((\d+)%\)", "HeapPercentFull", float   # (24%)
-                                                            # (00000%)
-    safepoint_name = " Safepoint \"(\w+)\"", "SafepointName", str   # Safepoint "Hello"
-                                                                    # Safepoint "Example"
-    safepoint_time_since_last = ", Time since last: (\d+) ns, ", "TimeFromLastSafepoint_ns", float  # , Time since last: 99999 ns
-                                                                                                    # , Time since last: 1 ns
-    safepoint_time_to_reach = "Reaching safepoint: (\d+) ns, ", "TimeToReachSafepoint_ns", float    # Reaching safepoint: 0 ns
-                                                                                                    # Reaching safepoint: 99999 ns
-    time_at_safepoint = "At safepoint: (\d+) ns, ", "AtSafepoint_ns", float     # At safepoint: 1000 ns
-                                                                                # At safepoint: 123 ns
-
-    total_time_safepoint = "Total: (\d+) ns$", "TotalTimeAtSafepoint_ns", float # Total: 1 ns$
-                                                                                # Total: 000000 ns$
-   
-    program_pause_time = (" Total time for which application threads were stopped: ([\d\.]+) seconds,", #  Total time for which application threads were stopped: 999 seconds,
-                        "TotalApplicationThreadPauseTime_seconds", float)                               #  Total time for which application threads were stopped: 00.000 seconds,
-    time_to_stop_application = " Stopping threads took: ([\d\.]+) seconds$", "TimeToStopApplication_seconds", float # Stopping threads took 990 seconds
-                                                                                                                    # Stopping threads took 000.000 seconds
-  #################################### 
+  ####################################
     
     # Creates the full regex group: Use the website on the top of this file to follow the logic visually.
     combined_groups = [
         start,
-        *__regex_or([date_time], 
-
-                    [time, time_unit]),
-        other_fields,
-        *__regex_or([gc_phase, 
-                    event_type, 
-                    event_name,
-                    additional_event_info, 
-                    *__regex_or([heap_before_gc, 
-                              heap_after_gc, 
-                              max_heapsize, 
-                              duration_ms],
-
-                              [zgc_heap_before_gc, 
-                              zgc_heap_after_gc, 
-                              zgc_max_heapsize])], 
-
-                    [safepoint_name,
-                     safepoint_time_since_last, 
-                     safepoint_time_to_reach, 
-                     time_at_safepoint, 
-                     total_time_safepoint],
-
-                    [program_pause_time, time_to_stop_application]
-                )
+        time,
+        time_unit,
+        event_type,
+        event_name,
+        heap_before_gc,
+        heap_after_gc,
+        duration_ms
     ]
     # Transform from a list of tuples, into 3 distinct lists. They are initally connected for readability
     regex_groups, column_names, data_types = [], [], []

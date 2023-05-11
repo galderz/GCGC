@@ -3,7 +3,7 @@
 #   Given a log file, parse through that file and return a gc_events_dataframe containing all
 #   relevant information from the log during runtime
 
-from src.parse_log_file import get_parsing_groups
+from src.parse_log_file_graalvm import get_parsing_groups
 import pandas as pd
 import numpy as np
 import re
@@ -218,12 +218,15 @@ def get_parsed_data_from_file(logfile, ignore_crashes = False):
                                                table_groups[column][1],  # DATATYPES
                                                table_groups[column][0])  # table indicies
 
-    ### Special Case ###
-    # Updates the eventtype column to properly put "Safepoint" at the eventtype, rather than None
-    table_groups["EventType"] = set_safepoints_eventype(
-                                table_groups["EventType"], 
-                                table_groups["SafepointName"], 
-                                table_groups["TimeToStopApplication_seconds"])
+    # ### Special Case ###
+    # # Updates the eventtype column to properly put "Safepoint" at the eventtype, rather than None
+    # table_groups["EventType"] = set_safepoints_eventype(
+    #                             table_groups["EventType"],
+    #                             table_groups["SafepointName"],
+    #                             table_groups["TimeToStopApplication_seconds"])
+
+    # Fix duration unit
+    table_groups["Duration_milliseconds"] = table_groups["Duration_seconds"][0] * 1000
     df = pd.DataFrame(table_groups)
     
     ## Clean data, apply resrictions as needed **
