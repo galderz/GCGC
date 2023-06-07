@@ -79,7 +79,7 @@ def scale_time(df):
         unit = df["TimeUnit"].iloc[0]
         if unit == "s":
             divisor = 1
-        elif unit == "ms":
+        elif unit == "msec":
             divisor = 1000
         elif unit == "ns": 
             divisor = 1000000000
