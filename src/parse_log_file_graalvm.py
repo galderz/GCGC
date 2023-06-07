@@ -24,14 +24,13 @@ def get_parsing_groups():
     start = "^", None, None
     
     time = "\[(\d+) ", "Time", float # 999999
-                                        # 123541.21425
-    time_unit = "(msec): ", "TimeUnit", str  # s
-                                                            # ms
-    # contains lookahead for time spent in event
-    event_type = "(Full GC|Incremental GC) ", "EventType", str # Full GC
+
+    time_unit = "(msec): ", "TimeUnit", str # msec
+
+    event_name = "(Full GC|Incremental GC) ", "EventName", str # Full GC
                                                                # Incremental GC
-    event_name = "\((\w+)\) ", "EventName", str    # Young
-                                                                    # Any Four __Words Here
+
+    gc_cause = "\((\w+)\) ", "GCCause", str # CollectOnAllocation
 
     # todo fix memory units M -> K
     # Examples: (Mixed), (Young) (Mixed Collection), (System.gc())
@@ -52,8 +51,8 @@ def get_parsing_groups():
         start,
         time,
         time_unit,
-        event_type,
         event_name,
+        gc_cause,
         heap_before_gc,
         heap_after_gc,
         duration_ms
