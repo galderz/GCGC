@@ -28,8 +28,8 @@ def get_parsing_groups():
     time_unit = "(msec): ", "TimeUnit", str  # s
                                                             # ms
     # contains lookahead for time spent in event
-    event_type = "(Full GC) ", "EventType", str  # Concurrent
-                                                                                                          # Pause 
+    event_type = "(Full GC|Incremental GC) ", "EventType", str # Full GC
+                                                               # Incremental GC
     event_name = "\((\w+)\) ", "EventName", str    # Young
                                                                     # Any Four __Words Here
 
