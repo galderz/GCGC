@@ -30,7 +30,7 @@ def get_parsing_groups():
     event_name = "(Full GC|Incremental GC) ", "EventName", str # Full GC
                                                                # Incremental GC
 
-    gc_cause = "\((\w+)\) ", "GCCause", str # CollectOnAllocation
+    event_type = "\((\w+)\) ", "EventType", str # CollectOnAllocation
 
     # todo fix memory units M -> K
     # Examples: (Mixed), (Young) (Mixed Collection), (System.gc())
@@ -52,7 +52,7 @@ def get_parsing_groups():
         time,
         time_unit,
         event_name,
-        gc_cause,
+        event_type,
         heap_before_gc,
         heap_after_gc,
         duration_ms
