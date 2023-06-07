@@ -52,6 +52,7 @@ def get_gc_event_tables(files, zero_times=True, ignore_crashes = False):
             
             gc_event_dataframe = get_parsed_data_from_file(file, ignore_crashes)
             gc_event_dataframe = scale_time(gc_event_dataframe)
+            gc_event_dataframe = scale_duration(gc_event_dataframe)
             gc_event_dataframe = scale_heap_allocation(gc_event_dataframe)
             if not gc_event_dataframe.empty:
                 gc_event_dataframes.append(gc_event_dataframe)
@@ -96,7 +97,19 @@ def scale_time(df):
     
     df["TimeFromStart_seconds"] = time_seconds
     df = df.drop(columns=["Time", "TimeUnit"], axis = 1)
-    return df        
+    return df
+
+# Create a column "Duration_milliseconds" that scales the duration in seconds to milliseconds
+def scale_duration(df):
+    if df.empty:
+        return df
+    duration_milliseconds = []
+    for row in df["Duration_seconds"]:
+        duration_milliseconds.append(row * 1000)
+
+    df["Duration_milliseconds"] = duration_milliseconds
+    df = df.drop(columns=["Duration_seconds"], axis = 1)
+    return df
 
 # Create a column "HeapPercentFull", and populate it with data if not already populated 
 def scale_heap_allocation(df):
@@ -225,8 +238,6 @@ def get_parsed_data_from_file(logfile, ignore_crashes = False):
     #                             table_groups["SafepointName"],
     #                             table_groups["TimeToStopApplication_seconds"])
 
-    # Fix duration unit
-    table_groups["Duration_milliseconds"] = table_groups["Duration_seconds"][0] * 1000
     df = pd.DataFrame(table_groups)
     
     ## Clean data, apply resrictions as needed **
