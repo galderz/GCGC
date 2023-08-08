@@ -52,6 +52,8 @@ def get_gc_event_tables(files, zero_times=True, ignore_crashes = False):
             
             gc_event_dataframe = get_parsed_data_from_file(file, ignore_crashes)
             gc_event_dataframe = scale_time(gc_event_dataframe)
+            gc_event_dataframe = scale_duration(gc_event_dataframe)
+            gc_event_dataframe = scale_heap_units(gc_event_dataframe)
             gc_event_dataframe = scale_heap_allocation(gc_event_dataframe)
             if not gc_event_dataframe.empty:
                 gc_event_dataframes.append(gc_event_dataframe)
@@ -78,7 +80,7 @@ def scale_time(df):
         unit = df["TimeUnit"].iloc[0]
         if unit == "s":
             divisor = 1
-        elif unit == "ms":
+        elif unit == "ms" or unit == "msec":
             divisor = 1000
         elif unit == "ns": 
             divisor = 1000000000
@@ -96,9 +98,38 @@ def scale_time(df):
     
     df["TimeFromStart_seconds"] = time_seconds
     df = df.drop(columns=["Time", "TimeUnit"], axis = 1)
-    return df        
+    return df
 
-# Create a column "HeapPercentFull", and populate it with data if not already populated 
+# Create a column "Duration_milliseconds" that scales the duration in seconds to milliseconds
+def scale_duration(df):
+    if df.empty:
+        return df
+    duration_milliseconds = []
+    for row in df["Duration_seconds"]:
+        duration_milliseconds.append(row * 1000)
+
+    df["Duration_milliseconds"] = duration_milliseconds
+    df = df.drop(columns=["Duration_seconds"], axis = 1)
+    return df
+
+# Create columns "HeapBeforeGC" and "HeapAfterGC" that scales the duration in kylobytes to megabytes
+def scale_heap_units(df):
+    if df.empty:
+        return df
+    df = scale_heap_unit(df, "HeapBeforeGC_kb", "HeapBeforeGC")
+    df = scale_heap_unit(df, "HeapAfterGC_kb", "HeapAfterGC")
+    return df
+
+
+def scale_heap_unit(df, from_column, to_column):
+    heap_mb = []
+    for row in df[from_column]:
+        heap_mb.append(row * 1024)
+    df[to_column] = heap_mb
+    df = df.drop(columns=[from_column], axis=1)
+    return df
+
+# Create a column "HeapPercentFull", and populate it with data if not already populated
 def scale_heap_allocation(df):
     if df.empty:
         return df
